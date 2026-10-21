@@ -12,3 +12,4 @@ jobs:
       - run: ruff check .
       - run: pytest -q
       - working-directory: ./Certiport
+      - env: PYTHONPATH:.
