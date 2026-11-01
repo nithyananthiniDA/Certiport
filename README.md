@@ -1,122 +1,134 @@
 # CertiPort – AI-Powered Telecom Certification Assistant
 
-CertiPort is an AI-powered telecom certification assistant that helps engineers find and understand technical requirements from Telecom Engineering Centre (TEC) documents and MTCTE certification resources in India.
+**An intelligent document retrieval and question-answering system for telecom certification requirements.**
 
-## Problem
+## About the Project
 
-Telecom test engineers spend considerable time searching through large technical documents to identify certification requirements. Traditional search systems may return lengthy documents without directly answering questions, while semantic search may miss exact identifiers such as `TEC 67010:2026`, `GR 91000:2022`, and `Clause 4.2.1`.
+CertiPort is an AI-powered assistant designed to help telecom test and compliance engineers retrieve technical requirements from Telecom Engineering Centre (TEC) standards and MTCTE documents.
 
-CertiPort aims to solve this problem using hybrid search and AI-powered question answering. It retrieves relevant technical clauses and generates answers supported by source citations, helping engineers verify information more efficiently.
+Instead of manually searching hundreds of pages, users can ask questions and retrieve relevant technical clauses with document, page, and clause references.
 
-## Who it is for
+## Key Features
 
-- Telecom test engineers preparing equipment for MTCTE certification.
-- Compliance engineers at telecom equipment manufacturers in India.
+- Extracts text and technical clauses from TEC PDF documents.
+- Supports page-level and clause-level search.
+- Uses BM25 for relevance-based information retrieval.
+- Supports exact clause-number lookup.
+- Generates context-grounded answers using the OpenAI API.
+- Provides source citations for verification.
+- Provides TEC document-based fallback answers when AI generation is unavailable.
 
-## Signature feature
+## Technology Stack
 
-An AI assistant that answers telecom certification questions using technical documents, finds exact clauses, and provides citations so engineers can verify the answers.
-
-## Hardest problem 
-
-The main challenge is retrieving the correct technical clause when a question contains exact document numbers or clause identifiers. CertiPort plans to combine BM25 keyword search, vector-based semantic search, and reranking to improve retrieval accuracy. Answers will use retrieved evidence and citations to reduce unsupported AI responses. Performance will be evaluated using Recall@5 on 50 benchmark questions, with a target of 90% or higher.
+- **Language:** Python
+- **Backend:** FastAPI
+- **Information Retrieval:** BM25, rank-bm25
+- **PDF Processing:** PyMuPDF
+- **AI Integration:** OpenAI API
+- **Data Storage:** JSON
+- **Testing:** Pytest
+- **Version Control:** Git and GitHub
 
 ## Dataset
 
-| Source | Link | Documents | Pages | Licence / terms |
-|---|---|---|---|---|
-| Telecom Engineering Centre (TEC) | [TEC Website](https://www.tec.gov.in/) | To be collected | Target: 2,000+ | Subject to individual document terms |
+Currently processed:
 
-Planned documents include:
+- 4 TEC/MTCTE documents
+- 304 document pages
+- 636 extracted clauses
 
-- Essential Requirements (ERs)
-- Generic Requirements (GRs)
-- Technical test guides
-- MTCTE certification procedures
-- Official circulars
+## System Architecture
 
-## 10 Real Questions
+```text
+User Question
+     |
+     v
+FastAPI Backend
+     |
+     v
+BM25 Search Engine
+     |
+     v
+Relevant TEC Clauses
+     |
+     v
+OpenAI Answer Generation
+     |
+     v
+Answer + Source Citations
+```
 
-1. What are the battery test requirements in TEC 67010:2026 for VRLA batteries?
-2. Which Essential Requirement applies to a Wi-Fi router?
-3. What is the MTCTE process for a GPON ONT?
-4. How can I find a TEC document by its document number?
-5. How can I retrieve a specific clause?
-6. Which technical requirements apply to a telecom product?
-7. How can I verify the source of an AI-generated answer?
-8. What information is required for a telecom equipment test plan?
-9. How can the system distinguish similar clauses?
-10. How can retrieval accuracy be measured?
+## API Endpoints
 
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/health` | Application health |
+| GET | `/search` | Search document pages |
+| GET | `/clauses/search` | Search technical clauses |
+| GET | `/ask` | Ask questions using TEC documents |
 
-## Run It
+API documentation: `http://127.0.0.1:8000/docs`
 
-### Prerequisites
-
-- Python 3.11 or a compatible version
-- Visual Studio Code
-- Git
-
-### 1. Clone the repository
+## Installation
 
 ```bash
 git clone https://github.com/nithyananthiniDA/Certiport.git
 cd Certiport
+python -m venv .venv
 ```
 
-### 2. Create and activate a virtual environment
+Activate the environment:
 
 ```powershell
-python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-### 3. Install dependencies
+Install dependencies:
 
-```powershell
-pip install -r requirements-dev.txt
+```bash
+pip install -e .
 ```
 
-### 4. Configure environment variables
+Configure your OpenAI API key in a local `.env` file:
 
-```powershell
-copy .env.example .env
+```env
+OPENAI_API_KEY=your_api_key
 ```
 
-Add any required API credentials to `.env`. Never upload API keys to GitHub.
+Run the application:
 
-### 5. Run the application
-
-```powershell
-uvicorn app.main:app --reload
+```bash
+python -m uvicorn app.main:app --reload
 ```
 
-If implemented, access the API at [http://localhost:8000](http://localhost:8000) and interactive documentation at [http://localhost:8000/docs](http://localhost:8000/docs).
+## Testing
 
-### 6. Run tests
+Run automated tests:
 
-```powershell
-pytest
+```bash
+python -m pytest -v
 ```
 
-## Evaluation Metrics
+**Latest verified result: 12 tests passed.**
 
-The primary metric is Recall@5, which measures whether the correct supporting passage appears among the top five search results.
+## Future Enhancements
 
-Target: 90% or higher on 50 benchmark questions containing document or clause identifiers.
+- Hybrid BM25 and vector search.
+- Semantic document retrieval.
+- Cross-encoder reranking.
+- Expansion to 2,000+ pages.
+- Automated telecom compliance test-plan generation with human approval.
 
-## Expected Outcome
+## Project Disclaimer
 
-CertiPort aims to make telecom certification research faster by answering questions in natural language, retrieving exact clauses, and providing citations to official sources. It also aims to support test plan preparation with a human review and approval workflow.
-
-## Disclaimer
-
-CertiPort is an engineering support project. All technical requirements and proposed test plans must be verified against current official TEC documents and applicable regulations.
+CertiPort is an engineering support tool. All technical requirements must be verified against the latest official TEC documents.
 
 ## Author
 
-Nithyananthini D A
+**Nithyananthini D A**
+
+Electronics and Communication Engineering
 
 GitHub: [nithyananthiniDA](https://github.com/nithyananthiniDA)
 
-Domain: Artificial Intelligence, Information Retrieval, and Telecommunications
+**Project Repository:** [CertiPort](https://github.com/nithyananthiniDA/Certiport)

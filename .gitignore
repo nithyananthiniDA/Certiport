@@ -6,5 +6,8 @@ __pycache__/
 .ruff_cache/
 logs/
 data/raw/
+data/sample/
+data/processed/
+*.pdf
 *.sqlite
 .DS_Store
