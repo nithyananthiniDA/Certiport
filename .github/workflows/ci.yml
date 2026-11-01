@@ -1,3 +1,4 @@
+
 name: CI
 
 on: [push, pull_request]
@@ -15,14 +16,7 @@ jobs:
 
       - name: Install dependencies
         run: python -m pip install -r requirements.txt -r requirements-dev.txt
-<<<<<<< HEAD
 
-=======
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
->>>>>>> 02dd4fd (Complete Week 2 system design and Docker setup)
       - name: Run Ruff
         run: ruff check .
 
