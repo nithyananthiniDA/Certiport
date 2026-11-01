@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from openai import OpenAIError
 
 from app.config import Settings, get_settings
-from app.llm import generate_answer
+from app.llm import generate_answer, get_usage
 from app.search import TelecomSearch
 
 app = FastAPI(
@@ -52,6 +52,13 @@ def health(settings: SettingsDep) -> dict:
         "app": settings.app_name,
         "environment": settings.environment,
     }
+
+
+@app.get("/usage")
+def usage() -> dict:
+    """Return accumulated LLM token usage and estimated cost."""
+
+    return get_usage()
 
 
 @app.get("/search")
@@ -177,24 +184,20 @@ def ask_certification_question(
 
     context = "\n\n".join(context_parts)
 
-    # Try AI answer generation.
     try:
         answer = generate_answer(
             question=query,
             context=context,
         )
-
         answer_source = "openai"
 
     except (ValueError, OpenAIError):
-        # Return retrieved TEC text if AI is unavailable.
         answer = (
             "AI-generated answer is currently unavailable. "
             "The following information was retrieved directly "
             "from the TEC documents:\n\n"
             + "\n\n".join(context_parts)
         )
-
         answer_source = "tec_document_fallback"
 
     return {
