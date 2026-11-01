@@ -63,7 +63,7 @@ def download_urls(url_file):
         print(f"Error: File '{url_file}' not found.")
         sys.exit(1)
 
-    with open(url_file, "r", encoding="utf-8") as f:
+    with open(url_file, encoding="utf-8") as f:
         urls = [
             line.strip()
             for line in f

@@ -23,7 +23,7 @@ for filename in INPUT_FILES:
         print(f"File not found: {filename}")
         continue
 
-    with open(file_path, "r", encoding="utf-8") as file:
+    with open(file_path, encoding="utf-8") as file:
         pages = json.load(file)
 
     document_count = 0

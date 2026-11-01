@@ -5,7 +5,6 @@ from pathlib import Path
 
 from rank_bm25 import BM25Okapi
 
-
 DATA_DIR = Path("data/processed")
 CLAUSE_FILE = DATA_DIR / "clauses.json"
 

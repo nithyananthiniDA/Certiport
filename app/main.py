@@ -8,7 +8,6 @@ from app.config import Settings, get_settings
 from app.llm import generate_answer
 from app.search import TelecomSearch
 
-
 app = FastAPI(
     title="CertiPort Telecom Search",
     description="AI-powered telecom certification assistant using TEC documents.",

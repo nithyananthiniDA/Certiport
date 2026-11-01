@@ -1,7 +1,8 @@
 
-from pathlib import Path
 import argparse
 import json
+from pathlib import Path
+
 from pypdf import PdfReader
 
 
