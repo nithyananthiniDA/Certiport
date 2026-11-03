@@ -1,11 +1,17 @@
 
 import json
+import os
 import re
 from pathlib import Path
 
 from rank_bm25 import BM25Okapi
 
-DATA_DIR = Path("data/processed")
+# Local default: data/processed
+# Docker demo: demo_data/processed
+DATA_DIR = Path(
+    os.getenv("CERTIPORT_DATA_DIR", "data/processed")
+)
+
 CLAUSE_FILE = DATA_DIR / "clauses.json"
 
 
@@ -31,7 +37,9 @@ class TelecomSearch:
                     continue
 
                 try:
-                    with file_path.open("r", encoding="utf-8") as file:
+                    with file_path.open(
+                        "r", encoding="utf-8-sig"
+                    ) as file:
                         data = json.load(file)
 
                     if isinstance(data, list):
@@ -66,7 +74,9 @@ class TelecomSearch:
         # Load clause-level JSON data.
         if CLAUSE_FILE.exists():
             try:
-                with CLAUSE_FILE.open("r", encoding="utf-8") as file:
+                with CLAUSE_FILE.open(
+                    "r", encoding="utf-8-sig"
+                ) as file:
                     self.clauses = json.load(file)
 
             except (json.JSONDecodeError, OSError) as error:
@@ -219,7 +229,7 @@ class TelecomSearch:
         }
 
         # Reject queries containing unknown words.
-        if not all(
+        if not any(
             token in vocabulary
             for token in query_tokens
         ):

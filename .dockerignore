@@ -1,3 +1,4 @@
+
 .env
 .git
 .github
@@ -7,5 +8,12 @@ __pycache__
 .ruff_cache
 *.pyc
 *.pdf
-data/
 tests/
+
+data/*
+!data/demo/
+data/demo/*
+!data/demo/processed/
+data/demo/processed/*
+!data/demo/processed/clauses.json
+!data/demo/processed/demo_pages.json

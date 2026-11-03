@@ -1,0 +1,23 @@
+﻿[
+  {
+    "document_id": "DEMO_TELECOM_001",
+    "page_number": 1,
+    "clause_number": "1.1",
+    "clause_title": "Demo Battery Capacity",
+    "text": "A demonstration telecom backup battery system shall provide a minimum backup duration of 4 hours at its specified reference load."
+  },
+  {
+    "document_id": "DEMO_TELECOM_001",
+    "page_number": 2,
+    "clause_number": "2.1",
+    "clause_title": "Demo Temperature Monitoring",
+    "text": "A demonstration telecom equipment cabinet shall monitor internal temperature and generate an alert when the temperature exceeds 40 degrees Celsius."
+  },
+  {
+    "document_id": "DEMO_TELECOM_001",
+    "page_number": 3,
+    "clause_number": "3.1",
+    "clause_title": "Demo Power Supply",
+    "text": "A demonstration telecom power supply shall provide a nominal output voltage of 48 volts DC."
+  }
+]
