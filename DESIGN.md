@@ -4,7 +4,7 @@
 
 CertiPort is an AI-powered telecom certification assistant that helps users search and understand Telecom Engineering Centre (TEC) documents.
 
-The system uses FastAPI for API development, BM25 for document retrieval, and OpenAI for AI-generated answers.
+The system uses FastAPI for API development, BM25 for document retrieval, OpenAI API for AI-generated answers, and Ollama as a local AI fallback.
 
 ## 2. Technology Stack
 
@@ -14,12 +14,14 @@ The system uses FastAPI for API development, BM25 for document retrieval, and Op
 | Backend Framework | FastAPI |
 | Search Algorithm | BM25 |
 | Data Storage | JSON files |
-| AI Integration | OpenAI API |
+| Primary AI Integration | OpenAI API |
+| Local AI Fallback | Ollama – Qwen 2.5 1.5B |
 | Data Processing | PyMuPDF |
 | Testing | Pytest |
 | Code Quality | Ruff |
 | Containerization | Docker |
 | CI/CD | GitHub Actions |
+| Cloud Hosting | Render |
 
 ## 3. System Architecture
 
@@ -29,15 +31,16 @@ The system uses FastAPI for API development, BM25 for document retrieval, and Op
 4. The search engine loads JSON data and tokenizes the content.
 5. BM25 retrieves relevant pages or clauses.
 6. The `/ask` endpoint sends retrieved context to the OpenAI API.
-7. If AI generation fails, the application returns the retrieved TEC document content as a fallback.
-8. Results include document and clause citations.
+7. If OpenAI is unavailable, the application attempts to generate an answer using the locally configured Ollama model.
+8. If both AI providers are unavailable, the application returns retrieved TEC document content as a fallback.
+9. Results include document and clause citations.
 
 ## 4. API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/health` | Checks application health and environment |
-| GET | `/usage` | Returns accumulated token usage and estimated cost |
+| GET | `/usage` | Returns token usage and estimated cost |
 | GET | `/search` | Searches TEC documents at page level |
 | GET | `/clauses/search` | Searches individual TEC clauses |
 | GET | `/ask` | Answers questions using retrieved TEC clauses |
@@ -102,30 +105,35 @@ The system also supports exact clause-number lookup.
 The `/ask` endpoint retrieves relevant TEC clauses before generating an answer.
 
 - Primary answer generation: OpenAI API.
-- Current fallback: Retrieved TEC document text.
+- Secondary AI fallback: Locally configured Ollama model (`qwen2.5:1.5b`).
+- Final fallback: Retrieved TEC document content.
 - Citations: Document ID, page number, clause number and clause title.
 
-A separate fallback AI model is not yet implemented.
+The Ollama integration runs locally on the development machine. It is not automatically available to the Docker or Render deployments.
 
 ## 8. Usage Monitoring
 
 The `/usage` endpoint provides:
 
-- Number of successful LLM requests recorded.
-- Input tokens.
-- Output tokens.
-- Total tokens.
-- Estimated API cost.
-- Model name.
+- OpenAI request count.
+- OpenAI input and output tokens.
+- Ollama request count.
+- Ollama input and output token counts.
+- Total token counts.
+- Estimated OpenAI API cost.
+- Model name and configured Ollama model.
 
 Usage is currently maintained in application memory and resets when the application restarts.
+
+Ollama usage is tracked separately, and its local inference cost is not included in the OpenAI API cost estimate.
 
 ## 9. Error Handling
 
 - HTTP 400: Empty search query or question.
 - HTTP 503: TEC document data unavailable.
 - HTTP 500: Document data loading error.
-- AI API failure: Returns retrieved TEC document content as fallback.
+- OpenAI API failure: Attempts local Ollama generation.
+- OpenAI and Ollama failure: Returns retrieved TEC document content as fallback.
 
 ## 10. Deployment
 
@@ -145,12 +153,12 @@ The Docker deployment uses synthetic demonstration data. Private TEC documents r
 
 ## 11. Future Enhancements
 
-- Implement a secondary AI fallback model.
 - Integrate PostgreSQL with pgvector.
 - Add document embeddings and semantic search.
 - Improve retrieval using a re-ranking model.
 - Improve evaluation using real telecom certification questions.
 - Add persistent usage tracking.
+- Configure a cloud-accessible AI fallback for production.
 - Expand automated testing and monitoring.
 
 ## 12. Conclusion
