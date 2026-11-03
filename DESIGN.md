@@ -131,13 +131,17 @@ Usage is currently maintained in application memory and resets when the applicat
 
 The application is containerized using Docker.
 
-- Docker image: `certiport:week2`
+- Docker base image: `python:3.12-slim`
 - Application server: Uvicorn
 - Container port: 8000
-- Local test port: 8001
+- Local Docker test port: 8002
 - Health endpoint: `/health`
+- Cloud hosting: Render
+- Deployment URL: https://certiport-api.onrender.com
 
-GitHub Actions is used to automate code-quality checks and tests.
+GitHub Actions automates Ruff code-quality checks and Pytest execution on pushes and pull requests.
+
+The Docker deployment uses synthetic demonstration data. Private TEC documents remain separate from the public demo deployment.
 
 ## 11. Future Enhancements
 
@@ -145,8 +149,9 @@ GitHub Actions is used to automate code-quality checks and tests.
 - Integrate PostgreSQL with pgvector.
 - Add document embeddings and semantic search.
 - Improve retrieval using a re-ranking model.
-- Deploy the application to a free cloud hosting platform.
 - Improve evaluation using real telecom certification questions.
+- Add persistent usage tracking.
+- Expand automated testing and monitoring.
 
 ## 12. Conclusion
 
