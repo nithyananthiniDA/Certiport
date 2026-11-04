@@ -7,12 +7,13 @@ from app.config import Settings, get_settings
 from app.llm import generate_answer, get_usage
 from app.search import TelecomSearch
 from app.hybrid_clause_search import hybrid_clause_search
+from app.schemas import AskRequest, AskResponse
 
 
 app = FastAPI(
     title="CertiPort Telecom Search",
     description="AI-powered telecom certification document search and assistant.",
-    version="0.8.0",
+    version="0.9.0",
 )
 
 
@@ -33,7 +34,7 @@ def get_search_engine() -> TelecomSearch:
 def root():
     return {
         "message": "Welcome to CertiPort Telecom Search API",
-        "version": "0.8.0",
+        "version": "0.9.0",
     }
 
 
@@ -147,8 +148,6 @@ def search_hybrid(
             document_id=document_id,
         )
 
-        search_method = "Hybrid BM25 + Vector + RRF"
-
     except (ValueError, OSError, RuntimeError) as exc:
         raise HTTPException(
             status_code=503,
@@ -157,37 +156,22 @@ def search_hybrid(
 
     return {
         "query": query,
-        "search_method": search_method,
+        "search_method": "Hybrid BM25 + Vector + RRF",
         "total_results": len(results),
         "results": results,
     }
 
 
-@app.get("/ask")
-def ask_certification_question(
-    q: str = Query(
-        min_length=1,
-        description="Ask a telecom certification question.",
-    ),
-    limit: int = Query(default=5, ge=1, le=10),
+def generate_certification_answer(
+    query: str,
+    limit: int = 5,
     document_id: str | None = None,
 ) -> dict:
-    """Answer questions using hybrid-retrieved TEC clauses."""
-
-    query = q.strip()
-
-    if not query:
-        raise HTTPException(
-            status_code=400,
-            detail="Question cannot be empty.",
-        )
+    """Retrieve TEC clauses and generate an answer with citations."""
 
     engine = get_search_engine()
-
     search_method = "Hybrid BM25 + Vector + RRF"
 
-    # Use hybrid retrieval for the actual search engine.
-    # Keep BM25 compatibility for lightweight test engines.
     if hasattr(engine, "clauses"):
         try:
             results = hybrid_clause_search(
@@ -236,14 +220,12 @@ def ask_certification_question(
             f"Text: {result['matched_text']}"
         )
 
-        citations.append(
-            {
-                "document_id": result["document_id"],
-                "page_number": result["page_number"],
-                "clause_number": result["clause_number"],
-                "clause_title": result["clause_title"],
-            }
-        )
+        citations.append({
+            "document_id": result["document_id"],
+            "page_number": result["page_number"],
+            "clause_number": result["clause_number"],
+            "clause_title": result["clause_title"],
+        })
 
     context = "\n\n".join(context_parts)
 
@@ -287,6 +269,55 @@ def ask_certification_question(
         "answer_source": answer_source,
         "citations": citations,
     }
+
+
+@app.get("/ask")
+def ask_certification_question(
+    q: str = Query(
+        min_length=1,
+        description="Ask a telecom certification question.",
+    ),
+    limit: int = Query(default=5, ge=1, le=10),
+    document_id: str | None = None,
+) -> dict:
+    """Answer questions using hybrid-retrieved TEC clauses."""
+
+    query = q.strip()
+
+    if not query:
+        raise HTTPException(
+            status_code=400,
+            detail="Question cannot be empty.",
+        )
+
+    return generate_certification_answer(
+        query=query,
+        limit=limit,
+        document_id=document_id,
+    )
+
+
+@app.post("/ask", response_model=AskResponse)
+def ask_certification_question_post(
+    request: AskRequest,
+) -> AskResponse:
+    """Answer telecom certification questions using a JSON request."""
+
+    query = request.question.strip()
+
+    if not query:
+        raise HTTPException(
+            status_code=400,
+            detail="Question cannot be empty.",
+        )
+
+    result = generate_certification_answer(
+        query=query,
+        limit=request.limit,
+        document_id=request.document_id,
+    )
+
+    return AskResponse(**result)
 
 
 @app.get("/usage")
