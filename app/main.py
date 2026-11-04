@@ -1,4 +1,4 @@
-
+﻿
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
@@ -6,49 +6,41 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from app.config import Settings, get_settings
 from app.llm import generate_answer, get_usage
 from app.search import TelecomSearch
+from app.hybrid_clause_search import hybrid_clause_search
+
 
 app = FastAPI(
     title="CertiPort Telecom Search",
-    description=(
-        "AI-powered telecom certification assistant "
-        "using TEC documents."
-    ),
-    version="0.7.0",
+    description="AI-powered telecom certification document search and assistant.",
+    version="0.8.0",
 )
 
-SettingsDep = Annotated[Settings, Depends(get_settings)]
 
-_search_engine: TelecomSearch | None = None
+_search_engine = None
 
 
 def get_search_engine() -> TelecomSearch:
-    """Load the search engine when needed."""
-
+    """Create and reuse the telecom document search engine."""
     global _search_engine
 
     if _search_engine is None:
-        try:
-            _search_engine = TelecomSearch()
-
-        except FileNotFoundError as exc:
-            raise HTTPException(
-                status_code=503,
-                detail="TEC document data is not available.",
-            ) from exc
-
-        except (OSError, ValueError) as exc:
-            raise HTTPException(
-                status_code=500,
-                detail="Could not load TEC document data.",
-            ) from exc
+        _search_engine = TelecomSearch()
 
     return _search_engine
 
 
-@app.get("/health")
-def health(settings: SettingsDep) -> dict:
-    """Check application status."""
+@app.get("/")
+def root():
+    return {
+        "message": "Welcome to CertiPort Telecom Search API",
+        "version": "0.8.0",
+    }
 
+
+@app.get("/health")
+def health(
+    settings: Annotated[Settings, Depends(get_settings)],
+):
     return {
         "status": "ok",
         "app": settings.app_name,
@@ -56,20 +48,16 @@ def health(settings: SettingsDep) -> dict:
     }
 
 
-@app.get("/usage")
-def usage() -> dict:
-    """Return accumulated LLM token usage and estimated cost."""
-
-    return get_usage()
-
-
 @app.get("/search")
-def search_document(
-    q: str = Query(min_length=1),
-    limit: int = Query(default=10, ge=1, le=50),
+def search_documents(
+    q: str = Query(
+        min_length=1,
+        description="Search TEC document pages.",
+    ),
+    limit: int = Query(default=5, ge=1, le=20),
     document_id: str | None = None,
-) -> dict:
-    """Search TEC document pages."""
+):
+    """Search TEC document pages using BM25."""
 
     query = q.strip()
 
@@ -89,27 +77,29 @@ def search_document(
 
     return {
         "query": query,
-        "document_id": document_id,
-        "total_results": len(results),
         "search_method": "BM25",
+        "total_results": len(results),
         "results": results,
     }
 
 
 @app.get("/clauses/search")
 def search_clauses(
-    q: str = Query(min_length=1),
-    limit: int = Query(default=10, ge=1, le=50),
+    q: str = Query(
+        min_length=1,
+        description="Search TEC document clauses.",
+    ),
+    limit: int = Query(default=5, ge=1, le=20),
     document_id: str | None = None,
-) -> dict:
-    """Search individual TEC clauses."""
+):
+    """Search individual TEC clauses using BM25."""
 
     query = q.strip()
 
     if not query:
         raise HTTPException(
             status_code=400,
-            detail="Search query cannot be empty.",
+            detail="Clause search query cannot be empty.",
         )
 
     engine = get_search_engine()
@@ -122,9 +112,53 @@ def search_clauses(
 
     return {
         "query": query,
-        "document_id": document_id,
-        "total_results": len(results),
         "search_method": "BM25 clause-level",
+        "total_results": len(results),
+        "results": results,
+    }
+
+
+@app.get("/hybrid-search")
+def search_hybrid(
+    q: str = Query(
+        min_length=1,
+        description="Search using BM25 and vector retrieval.",
+    ),
+    limit: int = Query(default=5, ge=1, le=10),
+    document_id: str | None = None,
+):
+    """Search TEC clauses using hybrid BM25 and vector retrieval."""
+
+    query = q.strip()
+
+    if not query:
+        raise HTTPException(
+            status_code=400,
+            detail="Search query cannot be empty.",
+        )
+
+    engine = get_search_engine()
+
+    try:
+        results = hybrid_clause_search(
+            query=query,
+            search_engine=engine,
+            limit=limit,
+            document_id=document_id,
+        )
+
+        search_method = "Hybrid BM25 + Vector + RRF"
+
+    except (ValueError, OSError, RuntimeError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Hybrid search is unavailable: {str(exc)}",
+        ) from exc
+
+    return {
+        "query": query,
+        "search_method": search_method,
+        "total_results": len(results),
         "results": results,
     }
 
@@ -138,7 +172,7 @@ def ask_certification_question(
     limit: int = Query(default=5, ge=1, le=10),
     document_id: str | None = None,
 ) -> dict:
-    """Answer questions using retrieved TEC clauses."""
+    """Answer questions using hybrid-retrieved TEC clauses."""
 
     query = q.strip()
 
@@ -150,17 +184,42 @@ def ask_certification_question(
 
     engine = get_search_engine()
 
-    results = engine.search_clauses(
-        query=query,
-        limit=limit,
-        document_id=document_id,
-    )
+    search_method = "Hybrid BM25 + Vector + RRF"
+
+    # Use hybrid retrieval for the actual search engine.
+    # Keep BM25 compatibility for lightweight test engines.
+    if hasattr(engine, "clauses"):
+        try:
+            results = hybrid_clause_search(
+                query=query,
+                search_engine=engine,
+                limit=limit,
+                document_id=document_id,
+            )
+
+        except Exception:
+            results = engine.search_clauses(
+                query=query,
+                limit=limit,
+                document_id=document_id,
+            )
+
+            search_method = "BM25 clause-level fallback"
+
+    else:
+        results = engine.search_clauses(
+            query=query,
+            limit=limit,
+            document_id=document_id,
+        )
+
+        search_method = "BM25 clause-level"
 
     if not results:
         return {
             "question": query,
             "answer": "No relevant TEC document clauses were found.",
-            "search_method": "BM25 clause-level",
+            "search_method": search_method,
             "answer_source": "none",
             "citations": [],
         }
@@ -177,12 +236,14 @@ def ask_certification_question(
             f"Text: {result['matched_text']}"
         )
 
-        citations.append({
-            "document_id": result["document_id"],
-            "page_number": result["page_number"],
-            "clause_number": result["clause_number"],
-            "clause_title": result["clause_title"],
-        })
+        citations.append(
+            {
+                "document_id": result["document_id"],
+                "page_number": result["page_number"],
+                "clause_number": result["clause_number"],
+                "clause_title": result["clause_title"],
+            }
+        )
 
     context = "\n\n".join(context_parts)
 
@@ -198,7 +259,6 @@ def ask_certification_question(
             if "return_provider" not in str(exc):
                 raise
 
-            # Compatibility with older mocked functions.
             generated = generate_answer(
                 question=query,
                 context=context,
@@ -223,7 +283,14 @@ def ask_certification_question(
     return {
         "question": query,
         "answer": answer,
-        "search_method": "BM25 clause-level",
+        "search_method": search_method,
         "answer_source": answer_source,
         "citations": citations,
     }
+
+
+@app.get("/usage")
+def usage():
+    """Return LLM token and cost usage information."""
+
+    return get_usage()

@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     environment: str = "local"
 
     openai_api_key: SecretStr | None = None
+    database_url: SecretStr | None = None
 
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:1.5b"
