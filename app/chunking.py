@@ -1,4 +1,3 @@
-
 def chunk_pages(pages, chunk_size=500, overlap=75):
     """Split document pages into overlapping word-based chunks."""
 
@@ -20,14 +19,16 @@ def chunk_pages(pages, chunk_size=500, overlap=75):
         chunk_index = 0
 
         for start in range(0, len(words), step):
-            chunk_words = words[start:start + chunk_size]
+            chunk_words = words[start : start + chunk_size]
 
-            chunks.append({
-                "document_id": page["document_id"],
-                "page_number": page["page_number"],
-                "chunk_index": chunk_index,
-                "text": " ".join(chunk_words)
-            })
+            chunks.append(
+                {
+                    "document_id": page["document_id"],
+                    "page_number": page["page_number"],
+                    "chunk_index": chunk_index,
+                    "text": " ".join(chunk_words),
+                }
+            )
 
             chunk_index += 1
 

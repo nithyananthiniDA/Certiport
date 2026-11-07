@@ -1,4 +1,3 @@
-
 import psycopg
 from pgvector.psycopg import register_vector
 
@@ -12,9 +11,7 @@ def get_connection():
     if settings.database_url is None:
         raise ValueError("DATABASE_URL is not configured")
 
-    connection = psycopg.connect(
-        settings.database_url.get_secret_value()
-    )
+    connection = psycopg.connect(settings.database_url.get_secret_value())
 
     register_vector(connection)
 

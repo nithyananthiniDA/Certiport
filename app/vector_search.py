@@ -1,4 +1,3 @@
-
 from pgvector import Vector
 
 from app.database import get_connection
@@ -68,12 +67,14 @@ def vector_search(
     results = []
 
     for row in rows:
-        results.append({
-            "document_id": row[0],
-            "page_number": row[1],
-            "chunk_index": row[2],
-            "content": row[3],
-            "similarity": float(row[4]),
-        })
+        results.append(
+            {
+                "document_id": row[0],
+                "page_number": row[1],
+                "chunk_index": row[2],
+                "content": row[3],
+                "similarity": float(row[4]),
+            }
+        )
 
     return results

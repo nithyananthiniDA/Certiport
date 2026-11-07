@@ -1,4 +1,3 @@
-
 from app.clause_extractor import extract_clauses
 
 

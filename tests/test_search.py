@@ -1,4 +1,3 @@
-
 def test_search_clause_4_2_1(client):
     response = client.get("/search", params={"q": "4.2.1"})
 
@@ -22,10 +21,7 @@ def test_search_clause_5_1_1(client):
     data = response.json()
     assert data["total_results"] >= 1
 
-    page_numbers = [
-        result["page_number"]
-        for result in data["results"]
-    ]
+    page_numbers = [result["page_number"] for result in data["results"]]
 
     assert 25 in page_numbers
 

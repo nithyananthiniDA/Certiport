@@ -1,4 +1,4 @@
-﻿import json
+import json
 from urllib.request import Request, urlopen
 
 from app.config import get_settings
@@ -13,22 +13,14 @@ def generate_embeddings(texts):
         return []
 
     settings = get_settings()
-    ollama_url = (
-        settings.ollama_base_url.rstrip("/") + "/api/embed"
-    )
+    ollama_url = settings.ollama_base_url.rstrip("/") + "/api/embed"
 
-    payload = {
-        "model": EMBEDDING_MODEL,
-        "input": texts
-    }
+    payload = {"model": EMBEDDING_MODEL, "input": texts}
 
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
 
     request = Request(
-        ollama_url,
-        data=body,
-        headers={"Content-Type": "application/json; charset=utf-8"},
-        method="POST"
+        ollama_url, data=body, headers={"Content-Type": "application/json; charset=utf-8"}, method="POST"
     )
 
     with urlopen(request, timeout=120) as response:

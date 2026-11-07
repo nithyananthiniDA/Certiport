@@ -1,4 +1,3 @@
-
 import json
 from urllib.error import URLError
 from urllib.request import Request, urlopen
@@ -6,7 +5,6 @@ from urllib.request import Request, urlopen
 from openai import OpenAI, OpenAIError
 
 from app.config import get_settings
-
 
 OPENAI_MODEL = "gpt-4.1-mini"
 
@@ -77,9 +75,7 @@ def get_usage() -> dict:
     return {
         **_usage,
         **_provider_usage,
-        "estimated_cost_usd": round(
-            _usage["estimated_cost_usd"], 8
-        ),
+        "estimated_cost_usd": round(_usage["estimated_cost_usd"], 8),
         "model": _last_used_model or OPENAI_MODEL,
         "ollama_model": settings.ollama_model,
     }
@@ -136,13 +132,10 @@ def generate_answer(
                 _usage["requests"] += 1
                 _usage["input_tokens"] += input_tokens
                 _usage["output_tokens"] += output_tokens
-                _usage["total_tokens"] += (
-                    input_tokens + output_tokens
-                )
+                _usage["total_tokens"] += input_tokens + output_tokens
 
                 estimated_cost = (
-                    input_tokens * INPUT_PRICE_PER_MILLION
-                    + output_tokens * OUTPUT_PRICE_PER_MILLION
+                    input_tokens * INPUT_PRICE_PER_MILLION + output_tokens * OUTPUT_PRICE_PER_MILLION
                 ) / 1_000_000
 
                 _usage["estimated_cost_usd"] += estimated_cost
@@ -163,9 +156,7 @@ def generate_answer(
     # 2. Ollama fallback
     # --------------------------------------------------
 
-    url = (
-        f"{settings.ollama_base_url.rstrip('/')}/api/generate"
-    )
+    url = f"{settings.ollama_base_url.rstrip('/')}/api/generate"
 
     prompt = (
         f"{SYSTEM_INSTRUCTIONS}\n\n"
@@ -191,17 +182,13 @@ def generate_answer(
     request = Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json"
-        },
+        headers={"Content-Type": "application/json"},
         method="POST",
     )
 
     try:
         with urlopen(request, timeout=120) as response:
-            result = json.loads(
-                response.read().decode("utf-8")
-            )
+            result = json.loads(response.read().decode("utf-8"))
 
         answer = result.get("response", "").strip()
 
@@ -218,9 +205,7 @@ def generate_answer(
 
         _provider_usage["ollama_output_tokens"] += output_tokens
 
-        _provider_usage["ollama_total_tokens"] += (
-            input_tokens + output_tokens
-        )
+        _provider_usage["ollama_total_tokens"] += input_tokens + output_tokens
 
         _last_used_model = settings.ollama_model
 
@@ -230,6 +215,4 @@ def generate_answer(
         return answer
 
     except (URLError, TimeoutError, OSError, ValueError) as exc:
-        raise ValueError(
-            "Both OpenAI and local Ollama are unavailable."
-        ) from exc
+        raise ValueError("Both OpenAI and local Ollama are unavailable.") from exc

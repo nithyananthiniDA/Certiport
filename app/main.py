@@ -1,14 +1,12 @@
-﻿
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 
 from app.config import Settings, get_settings
-from app.llm import generate_answer, get_usage
-from app.search import TelecomSearch
 from app.hybrid_clause_search import hybrid_clause_search
+from app.llm import generate_answer, get_usage
 from app.schemas import AskRequest, AskResponse
-
+from app.search import TelecomSearch
 
 app = FastAPI(
     title="CertiPort Telecom Search",
@@ -220,12 +218,14 @@ def generate_certification_answer(
             f"Text: {result['matched_text']}"
         )
 
-        citations.append({
-            "document_id": result["document_id"],
-            "page_number": result["page_number"],
-            "clause_number": result["clause_number"],
-            "clause_title": result["clause_title"],
-        })
+        citations.append(
+            {
+                "document_id": result["document_id"],
+                "page_number": result["page_number"],
+                "clause_number": result["clause_number"],
+                "clause_title": result["clause_title"],
+            }
+        )
 
     context = "\n\n".join(context_parts)
 
@@ -256,8 +256,7 @@ def generate_certification_answer(
         answer = (
             "AI-generated answer is currently unavailable. "
             "The following information was retrieved directly "
-            "from the TEC documents:\n\n"
-            + "\n\n".join(context_parts)
+            "from the TEC documents:\n\n" + "\n\n".join(context_parts)
         )
 
         answer_source = "tec_document_fallback"

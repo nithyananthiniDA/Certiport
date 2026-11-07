@@ -1,4 +1,3 @@
-
 from fastapi.testclient import TestClient
 
 import app.main as main
@@ -12,10 +11,7 @@ class FakeSearchEngine:
                 "page_number": 22,
                 "clause_number": "4.2.1",
                 "clause_title": "VRLA Batteries",
-                "matched_text": (
-                    "VRLA batteries shall be manufactured "
-                    "in accordance with ISO 9001:2015."
-                ),
+                "matched_text": ("VRLA batteries shall be manufactured in accordance with ISO 9001:2015."),
             }
         ]
 
@@ -30,10 +26,7 @@ def test_ask_returns_grounded_answer_without_api_charge(monkeypatch):
     monkeypatch.setattr(
         main,
         "generate_answer",
-        lambda question, context: (
-            "Clause 4.2.1 requires VRLA batteries "
-            "to follow ISO 9001:2015."
-        ),
+        lambda question, context: "Clause 4.2.1 requires VRLA batteries to follow ISO 9001:2015.",
     )
 
     client = TestClient(main.app)

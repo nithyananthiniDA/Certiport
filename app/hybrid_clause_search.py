@@ -1,4 +1,3 @@
-﻿
 import re
 
 from app.search import TelecomSearch, normalize_document_id
@@ -67,13 +66,9 @@ def hybrid_clause_search(
     clauses_by_page = {}
 
     for clause in search_engine.clauses:
-        clause_document = normalize_document_id(
-            clause.get("document_id", "")
-        )
+        clause_document = normalize_document_id(clause.get("document_id", ""))
 
-        if document_id and clause_document != normalize_document_id(
-            document_id
-        ):
+        if document_id and clause_document != normalize_document_id(document_id):
             continue
 
         page_key = (
@@ -92,9 +87,7 @@ def hybrid_clause_search(
         vector_rank = vector_item["rank"]
         vector_result = vector_item["result"]
 
-        page_contribution = (
-            1.0 / (k + vector_rank)
-        ) / len(page_clauses)
+        page_contribution = (1.0 / (k + vector_rank)) / len(page_clauses)
 
         for clause in page_clauses:
             key = (
@@ -132,24 +125,15 @@ def hybrid_clause_search(
         requested_clause = clause_match.group(1)
 
         for clause in search_engine.clauses:
-            clause_document = normalize_document_id(
-                clause.get("document_id", "")
-            )
+            clause_document = normalize_document_id(clause.get("document_id", ""))
 
-            if document_id and clause_document != normalize_document_id(
-                document_id
-            ):
+            if document_id and clause_document != normalize_document_id(document_id):
                 continue
 
-            clause_number = str(
-                clause.get("clause_number", "")
-            ).strip()
+            clause_number = str(clause.get("clause_number", "")).strip()
 
             # Match the requested clause and its numbered subsections.
-            if not (
-                clause_number == requested_clause
-                or clause_number.startswith(requested_clause + ".")
-            ):
+            if not (clause_number == requested_clause or clause_number.startswith(requested_clause + ".")):
                 continue
 
             key = (
